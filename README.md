@@ -90,6 +90,24 @@ To start a fresh conversation:
 
 Since the bot uses Socket Mode (outbound WebSocket), no open ports or domain name are needed. Just run `bot.py` on any machine with Claude Code installed.
 
+### Keep the bot running with tmux
+
+`tmux` lets you run the bot in the background — it keeps running even after you close your terminal or IDE.
+
 ```bash
-nohup python3 bot.py > bot.log 2>&1 &
+# Install tmux if not already installed
+sudo apt install tmux   # Ubuntu/Debian
+brew install tmux       # macOS
+
+# Create a named session and start the bot
+tmux new -s slackvc
+python3 bot.py
+
+# Detach from the session (bot keeps running): Ctrl+B, then D
+
+# Later, reconnect to see logs
+tmux attach -t slackvc
+
+# Stop the bot
+tmux kill-session -t slackvc
 ```
