@@ -1,5 +1,6 @@
 .env
 channels.json
 approved_tools.json
+sessions.json
 __pycache__/
 *.pyc

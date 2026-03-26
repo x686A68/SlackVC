@@ -17,11 +17,24 @@ load_dotenv()
 
 CLAUDE_PATH = os.path.expanduser("~/.local/bin/claude")
 APPROVED_TOOLS_PATH = os.path.join(os.path.dirname(__file__), "approved_tools.json")
+SESSIONS_PATH = os.path.join(os.path.dirname(__file__), "sessions.json")
 
 with open(os.path.join(os.path.dirname(__file__), "channels.json")) as f:
     CHANNEL_MAP: dict[str, str] = json.load(f)
 
-sessions: dict[str, str] = {}
+
+def load_sessions() -> dict:
+    try:
+        with open(SESSIONS_PATH) as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_sessions(s: dict):
+    with open(SESSIONS_PATH, "w") as f:
+        json.dump(s, f)
+
+sessions: dict[str, str] = load_sessions()
 pending_permissions: dict[str, dict] = {}
 
 # Approved tools (persisted to disk)
@@ -94,6 +107,7 @@ def run_claude(prompt: str, channel_id: str, work_dir: str, say, depth: int = 0)
 
     if "session_id" in data:
         sessions[channel_id] = data["session_id"]
+        save_sessions(sessions)
 
     denials = data.get("permission_denials", [])
     print(f"[denials] {denials}")
@@ -145,6 +159,7 @@ def handle_mention(event, say):
 
     if prompt.lower() in ("new", "new session", "reset"):
         sessions.pop(channel_id, None)
+        save_sessions(sessions)
         say("New session started.")
         return
 
