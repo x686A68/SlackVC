@@ -17,24 +17,28 @@ load_dotenv()
 
 CLAUDE_PATH = os.path.expanduser("~/.local/bin/claude")
 APPROVED_TOOLS_PATH = os.path.join(os.path.dirname(__file__), "approved_tools.json")
-SESSIONS_PATH = os.path.join(os.path.dirname(__file__), "sessions.json")
+CLAUDE_PROJECTS_DIR = os.path.expanduser("~/.claude/projects")
 
 with open(os.path.join(os.path.dirname(__file__), "channels.json")) as f:
     CHANNEL_MAP: dict[str, str] = json.load(f)
 
 
-def load_sessions() -> dict:
+def find_latest_session(work_dir: str) -> str | None:
+    encoded = re.sub(r"[^a-zA-Z0-9]", "-", work_dir)
+    sessions_dir = os.path.join(CLAUDE_PROJECTS_DIR, encoded)
     try:
-        with open(SESSIONS_PATH) as f:
-            return json.load(f)
+        files = [
+            f for f in os.listdir(sessions_dir) if f.endswith(".jsonl")
+        ]
+        if not files:
+            return None
+        latest = max(files, key=lambda f: os.path.getmtime(os.path.join(sessions_dir, f)))
+        return latest[: -len(".jsonl")]
     except Exception:
-        return {}
+        return None
 
-def save_sessions(s: dict):
-    with open(SESSIONS_PATH, "w") as f:
-        json.dump(s, f)
 
-sessions: dict[str, str] = load_sessions()
+sessions: dict[str, str] = {}
 pending_permissions: dict[str, dict] = {}
 
 # Approved tools (persisted to disk)
@@ -90,7 +94,7 @@ def run_claude(prompt: str, channel_id: str, work_dir: str, say, depth: int = 0)
         return "Too many retries due to permission issues."
 
     cmd = [CLAUDE_PATH, "-p", prompt, "--output-format", "json"]
-    session_id = sessions.get(channel_id)
+    session_id = sessions.get(channel_id) or find_latest_session(work_dir)
     if session_id:
         cmd += ["--resume", session_id]
     cmd += ["--dangerously-skip-permissions"]
@@ -107,7 +111,6 @@ def run_claude(prompt: str, channel_id: str, work_dir: str, say, depth: int = 0)
 
     if "session_id" in data:
         sessions[channel_id] = data["session_id"]
-        save_sessions(sessions)
 
     denials = data.get("permission_denials", [])
     print(f"[denials] {denials}")
@@ -159,7 +162,6 @@ def handle_mention(event, say):
 
     if prompt.lower() in ("new", "new session", "reset"):
         sessions.pop(channel_id, None)
-        save_sessions(sessions)
         say("New session started.")
         return
 
