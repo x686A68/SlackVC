@@ -16,6 +16,25 @@ Each Slack channel maps to a local project directory. Claude Code runs in headle
 - [Claude Code](https://claude.ai/code) installed and authenticated
 - A Slack workspace where you have permission to install apps
 
+## Environment setup
+
+### Python
+
+```bash
+# Ubuntu/Debian
+sudo apt update
+sudo apt install python3 python3-pip tmux
+
+# macOS
+brew install python tmux
+```
+
+### Dependencies
+
+```bash
+pip install slack-bolt python-dotenv certifi
+```
+
 ## Setup
 
 ### 1. Create a Slack App (one click)
@@ -36,7 +55,6 @@ Then collect your three tokens:
 ```bash
 git clone https://github.com/x686A68/SlackVC.git
 cd SlackVC
-pip install slack-bolt python-dotenv certifi
 ```
 
 Copy and fill in the env file:
