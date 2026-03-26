@@ -66,7 +66,9 @@ The channel ID can be found by right-clicking a channel in Slack → **Copy link
 ### 3. Run
 
 ```bash
+tmux new -s slackvc
 python3 bot.py
+# Detach: Ctrl+B, then D
 ```
 
 ## Usage
